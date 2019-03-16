@@ -1,8 +1,10 @@
 #include <stdio.h>
 
-int main ()
-{
-    // count whitespace, all digits individually (array) and all other chars
+/*Count whitespace, all digits individually (array) and other chars*/
+
+int main () {
+   
+    printf("Count whitespace, numbers and other chars\n");
 
     return 0;
 }
