@@ -7,7 +7,7 @@
 
 int main () {
 
-    printf("Prints out one word of input per line\n");
+    printf("Prints out one word of input per line\nTo stop, enter EOF\n");
 
     int c, inWord = OUT;
 
@@ -21,5 +21,8 @@ int main () {
             inWord = IN;
         }
     }
+
+    printf("\nPress ENTER to exit\n");
+    getchar();
     return 0;
 }

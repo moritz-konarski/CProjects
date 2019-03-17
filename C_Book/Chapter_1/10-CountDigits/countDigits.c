@@ -4,7 +4,7 @@
 
 int main () {
    
-    printf("Count whitespace, numbers and other chars\n");
+    printf("Count whitespace, numbers and other chars\nTo stop enter EOF\n");
 
     int c, n_white, n_other;
     n_other = n_white = 0;
@@ -25,11 +25,12 @@ int main () {
     }
 
     printf("\nWhite space: %d\n", n_white);
-    printf("Digit\tNumber\n");
+    printf("Digit\tCount\n");
     for (int j = 0; j < 10; j++) {
-        printf("%03d\t%03d\n", j + 1, n_digits[j]);
+        printf("%3d\t%3d\n", j + 1, n_digits[j]);
     }
     printf("Other:\t%d\n", n_other);
-
+    printf("\nPress ENTER to exit\n");
+    getchar();
     return 0;
 }

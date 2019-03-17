@@ -7,7 +7,7 @@
 
 int main () {
 
-    printf("Count the words, lines and chars in the input\n");
+    printf("Count the words, lines and chars in the input\nTo stop, enter EOF\n");
 
     int c, wc, cc, lc, word;
     cc = wc = lc = 0;
@@ -30,6 +30,7 @@ int main () {
     printf("\nWords: %d\n", wc);
     printf("Chars: %d\n", cc);
     printf("Lines: %d\n", lc);
-
+    printf("\nPress ENTER to exit\n");
+    getchar();
     return 0;
 }

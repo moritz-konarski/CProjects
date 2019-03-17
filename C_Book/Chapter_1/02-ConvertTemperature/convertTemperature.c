@@ -19,6 +19,7 @@ int main () {
     for (int cels = START; cels <= END; cels += STEP) {
         printf("%3d\t%3d\n", 9 * cels / 5 + 32, cels);
     }
-
+    printf("\nPress ENTER to exit\n");
+    getchar();
     return 0;
 }

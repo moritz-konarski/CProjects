@@ -4,7 +4,7 @@
 
 int main () {
 
-    printf("Replace multiple spaces with a single space\n");
+    printf("Replace multiple spaces with a single space\nTo stop, enter EOF\n");
 
     int c, spaceCount = 0;
 
@@ -19,5 +19,7 @@ int main () {
             putchar(c);
         }        
     }
+    printf("\nPress ENTER to exit\n");
+    getchar();
     return 0;
 }

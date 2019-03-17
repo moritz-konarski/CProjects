@@ -4,7 +4,7 @@
 
 int main () {
 
-    printf("Count all new lines, spaces and tabs\n");
+    printf("Count all new lines, spaces and tabs\nTo stop, enter EOF\n");
 
     int c, newlines, tabs, spaces;
     newlines = tabs = spaces = 0;
@@ -19,9 +19,10 @@ int main () {
         }
     }
 
-    printf("\nLine count:\t%d\n", newlines);
-    printf("Tab count:\t%d\n", tabs);
-    printf("Space count:\t%d\n", spaces);
-
+    printf("\nLine count:\t%3d\n", newlines);
+    printf("Tab count:\t%3d\n", tabs);
+    printf("Space count:\t%3d\n", spaces);
+    printf("\nPress ENTER to exit\n");
+    getchar();
     return 0;
 }

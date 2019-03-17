@@ -4,7 +4,7 @@
 
 int main () {
 
-    printf("Count all chars\n");
+    printf("Count all chars\nTo stop, enter EOF\n");
 
     long count = 0;
 
@@ -16,6 +16,7 @@ int main () {
         ;
     */
     printf("\nThe count is: %ld\n", count);
-
+    printf("\nPress ENTER to exit\n");
+    getchar();
     return 0;
 }

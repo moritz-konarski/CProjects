@@ -4,7 +4,7 @@
 
 int main () {
 
-    printf("Replace tabs, slashes and backspaces by simple representation\n");
+    printf("Replace tabs, slashes and backspaces by simple representation\nTo stop, enter EOF\n");
 
     int c;
 
@@ -19,5 +19,7 @@ int main () {
             putchar(c);
         }
     }
+    printf("\nPress ENTER to exit\n");
+    getchar();
     return 0;
 }
