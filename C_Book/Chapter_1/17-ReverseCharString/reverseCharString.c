@@ -1,37 +1,38 @@
 #include <stdio.h>
 #define MAXLINE 1000
 
-/*A program that reads input lines and prints out the longest of them*/
+/*A program that reads input lines and prints their reverse*/
 
 int getLine(char line[], int limit);
 void copy(char from[], char to[]);
+void reverse(char line[], int length);
 
 int main() {
 
-    printf("Print the longest line of input\nEnter EOF to exit\n");
+    printf("Print the reverse of the input\nEnter EOF to exit\n");
 
-    int max_length = 0, length = 0;; 
+    int length = 0;; 
     char line[MAXLINE];
-    char max_line[MAXLINE];
 
     while ((length = getLine(line, MAXLINE)) > 0) {
-        if (MAXLINE == length) {
-            
-        }
-        if (length > max_length) {
-            max_length = length;
-            copy(line, max_line);
-        }
+        reverse(line, length);
+        printf("%s", line);
     }
 
-    if (max_length > 0) {
-        printf("\nLongest Line: \n%s", max_line);
-    }
-
-    printf("\nPress ENTER to exit\n");
+    printf("\nPress ENTER to exit");
     getchar();
 
     return 0;
+}
+
+/*  Reverses the given char string*/
+void reverse(char line[], int length) {
+    int temp;
+    for (int i = 0; i < length / 2; i++) {
+        temp = line[i];
+        line[i] = line[length - i - 2];
+        line[length - i - 2] = temp;
+    }
 }
 
 /*  Reads a line of input until '\n' or EOF and returns its length

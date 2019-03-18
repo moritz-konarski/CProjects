@@ -1,24 +1,28 @@
 #include <stdio.h>
 #define MAXLINE 1000
 
-/*A program that reads input lines and prints all longer than 80 chars*/
+/*A program that reads input lines and prints out the longest of them*/
 
 int getLine(char line[], int limit);
 void copy(char from[], char to[]);
 
 int main() {
 
-    printf("Print lines longer that 80 chars\nEnter EOF to exit\n");
+    printf("Print the longest line of input\nEnter EOF to exit\n");
 
-    int max_length = 0, length = 0;; 
+    int max_length = 0, length = 0;
     char line[MAXLINE];
     char max_line[MAXLINE];
 
     while ((length = getLine(line, MAXLINE)) > 0) {
-        if (length > 80) {
+        if (length > max_length) {
             max_length = length;
-            printf("%s", line);
+            copy(line, max_line);
         }
+    }
+
+    if (max_length > 0) {
+        printf("\nLongest Line: \n%s", max_line);
     }
 
     printf("\nPress ENTER to exit");
