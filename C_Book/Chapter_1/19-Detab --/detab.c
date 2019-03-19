@@ -10,6 +10,8 @@ int getLine(char line[], int limit);
 
 int main() {
 
+    printf("Replace all tabs by spaces\nTo stop enter EOF\n");
+
     int length = 0;
     char line[MAXLINE];
 
@@ -30,14 +32,15 @@ void replaceTabs(char line[], int length) {
         if ('\t' == line[i]) {
             line[i] = ' ';
             i++;
-            offset = COLSPERTAB - (i % COLSPERTAB) - 2;
+            offset = COLSPERTAB - ((i - 1) % COLSPERTAB) - 1;
+            printf("%d\n", offset);
             for (int j = length; j >= i; j--) {
+                line[j + offset] = ' ';
                 line[j + offset] = line[j];
+                line[j] = ' ';
             }
-            while (i % COLSPERTAB != 0) {
-                line[i] = ' ';
-                i++;
-            }
+            length += offset;
+            i += offset - 1;
         } else {
             i++;
         }
