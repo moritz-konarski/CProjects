@@ -53,6 +53,7 @@ int getLine(void) {
     return i;
 }
 
+
 /*  Copies one array to the other until '\0' is found, the end of the input*/
 void copy(void) {
     int i = 0;
