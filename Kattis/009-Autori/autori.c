@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-/*make a last name initials acronym out of authors names that are separated by hyphens*/
+/*make a last name initials acronym out of author's names that are separated by hyphens*/
 
 int main() {
 
