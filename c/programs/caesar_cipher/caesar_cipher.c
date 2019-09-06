@@ -3,65 +3,56 @@
 
 #define SHIFT 3
 #define RANGE '~' - ' '
+#define ENCRYPT_ARG 'e'
+#define DECRYPT_ARG 'd'
+#define SHIFT_ARG   's'
 
 void encrypt(char input[], int16_t shift, char output[]);
 void decrypt(char input[], int16_t shift, char output[]);
-void process_simple_command(char action, int16_t shift);
-
-
-char input[500], output[500];
+void input_en_decrypt(char action, int16_t shift);
 
 int main(uint8_t argc, char *argv[]) {
-    //the input and output strings
-
-    if (argc == 1) {
-        printf("Please enter the plain text: ");
-        scanf("%[^\n]s", input);
-
-        encrypt(input, SHIFT, output);
-        printf("The encrypted text is: %s\n", output);
-
-    } else if (argc == 2) {
-        for (uint8_t i = 1; i < argc; i++) {
-            if (argv[i][0] == '-') {
-                if (argv[i][1] == 'e') {
-                    printf("Please enter the plain text: ");
-                    scanf("%[^\n]s", input);
-
-                    encrypt(input, SHIFT, output);
-                    printf("The encrypted text is: %s\n", output);
-
-                } else if (argv[i][1] == 'd') {
-                    printf("Please enter the encrypted text: ");
-                    scanf("%[^\n]s", input);
-
-                    decrypt(input, SHIFT, output);
-                    printf("The plain text is: %s\n", output);
-
+    switch (argc) {
+    // no extra arguments given
+        case 1:
+            input_en_decrypt(ENCRYPT_ARG, SHIFT);
+            break;
+    // one argument given
+        case 2:
+            for (uint8_t i = 1; i < argc; i++) {
+                if (argv[i][0] == '-') {
+                    // if encrypt / decrypt command given
+                    if (argv[i][1] == ENCRYPT_ARG || argv[i][1] == DECRYPT_ARG) {
+                        input_en_decrypt(argv[i][1], SHIFT);
+                    }
+                    break;
                 }
-                break;
             }
-        }
-    } else if (argc == 3) {
-        //find out which command it is
-        for (uint8_t i = 1; i < argc; i++) {
-            if (argv[i][0] == '-') {
-                printf("- detected\n");
+            break;
+        case 3:
+    // two arguments given
+            for (uint8_t i = 1; i < argc; i++) {
+                if (argv[i][0] == '-') {
+                    //if a shift command is given
+                    if (argv[i][1] == SHIFT_ARG && i + 1 < argc) {
+                        int shift_input;
+                        sscanf(argv[i+1], "%d", &shift_input);
+                        input_en_decrypt(ENCRYPT_ARG, shift_input);
+                    }
+                    break;
+                }
             }
-        }
-        //if there is a shift given
-
-        //TODO: implement full file encryption
-
+            break;
     }
-
 
     return 0;
 }
 
-void process_simple_command(char action, int16_t shift) {
+void input_en_decrypt(char action, int16_t shift) {
+    char input[500], output[500];
     if (action == 'e') {
         printf("Please enter the plain text: ");
+        scanf("%[^\n]s", input);
         encrypt(input, shift, output);
         printf("The encrypted text is: %s\n", output);
     } else if (action == 'd') {
