@@ -7,10 +7,28 @@
 #define ENCRYPT_ARG 'e'
 #define DECRYPT_ARG 'd'
 #define SHIFT_ARG   's'
+#define FILE_ARG    'f'
 
 void encrypt(char input[], int16_t shift, char output[]);
 void decrypt(char input[], int16_t shift, char output[]);
 void input_en_decrypt(char action, int16_t shift);
+
+//Event queue
+//array of ints, setting the values as they come in, then work them
+//size is argc -x
+//has check for completion
+//has shift, decrypt/encrypt, output/input format
+// int queue[argc - 1] ?
+// queue[0] is bool complete
+// 1 is encrypt or decrypt
+// 2 is shift standard or not 0 -> requires int shift
+// 3 is input format, may require char name[]
+// 4 is output format, may require char name[]
+//
+//then int check_event_queue(int queue[]) that checks if all the values are
+//correct
+//
+//then a separated shift, - shift function for the encryption
 
 int main(uint8_t argc, char *argv[]) {
     int shift_input = 0;
@@ -33,16 +51,20 @@ int main(uint8_t argc, char *argv[]) {
             }
             break;
         case 3:
-    // two arguments given - set the encryption key
+    // two arguments given - set the encryption key or encrypt a whole file
             for (uint8_t i = 1; i < argc; i++) {
                 if (argv[i][0] == ARG_CHAR) {
-                    //if a shift command is given
-                    if (argv[i][1] == SHIFT_ARG && i + 1 < argc) {
-                        int shift_input;
-                        sscanf(argv[i+1], "%d", &shift_input);
-                        input_en_decrypt(ENCRYPT_ARG, shift_input);
+                    if (i + 1 < argc) {
+                        switch (argv[i][1]) {
+                            case SHIFT_ARG:     //if shift command is given
+                                    int shift_input;
+                                    sscanf(argv[i+1], "%d", &shift_input);
+                                    input_en_decrypt(ENCRYPT_ARG, shift_input);
+                                break;
+                            case FILE_ARG:      //if file arg is given
+                                break;
+                        }
                     }
-                    break;
                 }
             }
             break;
