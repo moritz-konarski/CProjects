@@ -30,6 +30,19 @@ void input_en_decrypt(char action, int16_t shift);
 //
 //then a separated shift, - shift function for the encryption
 
+
+//make the queue in such a way that first all the arguments are gathered and
+//then at the end it is just decided whether to encrypt or decrypt, thus
+//reducing code repetition.
+//while argc > 0 go through all the args that can appear and then store their
+//values somewhere and make a note that they were used or use them each time,
+//just change their default values 
+//maybe use union or struct to store this stuff in one place
+//default values: shift = 3; mode = encrypt; input = cli; output = cli; 
+//maybe function that offers to shift "A" to "c" and then calculates the shift
+//from that
+
+
 int main(uint8_t argc, char *argv[]) {
     int shift_input = 0;
     char argument = 'a';
@@ -98,12 +111,12 @@ int main(uint8_t argc, char *argv[]) {
 
 void input_en_decrypt(char action, int16_t shift) {
     char input[500], output[500];
-    if (action == 'e') {
+    if (action == ENCRYPT_ARG) {
         printf("Please enter the plain text: ");
         scanf("%[^\n]s", input);
         encrypt(input, shift, output);
         printf("The encrypted text is: \"%s\"\n", output);
-    } else if (action == 'd') {
+    } else if (action == DECRYPT_ARG) {
         printf("Please enter the encrypted text: ");
         scanf("%[^\n]s", input);
         decrypt(input, shift, output);
