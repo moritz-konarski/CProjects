@@ -1,135 +1,182 @@
 #include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <stdlib.h>
 #include <stdint.h>
+#include <stdbool.h>
 
-#define SHIFT 3
+#define STD_SHIFT    3
+#define STR_LEN     500
 #define RANGE '~' - ' '
 #define ARG_CHAR    '-'
+
 #define ENCRYPT_ARG 'e'
 #define DECRYPT_ARG 'd'
 #define SHIFT_ARG   's'
-#define FILE_ARG    'f'
+#define INPUT_ARG   'i'
+#define OUTPUT_ARG  'o'
 
-void encrypt(char input[], int16_t shift, char output[]);
-void decrypt(char input[], int16_t shift, char output[]);
-void input_en_decrypt(char action, int16_t shift);
+#define ALL_ARGS    "edi:o:s:"
 
-//Event queue
-//array of ints, setting the values as they come in, then work them
-//size is argc -x
-//has check for completion
-//has shift, decrypt/encrypt, output/input format
-// int queue[argc - 1] ?
-// queue[0] is bool complete
-// 1 is encrypt or decrypt
-// 2 is shift standard or not 0 -> requires int shift
-// 3 is input format, may require char name[]
-// 4 is output format, may require char name[]
-//
-//then int check_event_queue(int queue[]) that checks if all the values are
-//correct
-//
-//then a separated shift, - shift function for the encryption
+#define EMPTY_STR   "\0"
 
+struct Arguments {
+    int shift;
+    bool do_encryption;
+    char input_file_name[100], 
+         output_file_name[100];
+};
 
-//make the queue in such a way that first all the arguments are gathered and
-//then at the end it is just decided whether to encrypt or decrypt, thus
-//reducing code repetition.
-//while argc > 0 go through all the args that can appear and then store their
-//values somewhere and make a note that they were used or use them each time,
-//just change their default values 
-//maybe use union or struct to store this stuff in one place
-//default values: shift = 3; mode = encrypt; input = cli; output = cli; 
-//maybe function that offers to shift "A" to "c" and then calculates the shift
-//from that
-
+void caesar_shift(struct Arguments, char input[], char output[]);
+bool is_number(char str[]);
 
 int main(uint8_t argc, char *argv[]) {
-    int shift_input = 0;
-    char argument = 'a';
-    switch (argc) {
-    // no extra arguments given - encrypt only
-        case 1:
-            input_en_decrypt(ENCRYPT_ARG, SHIFT);
-            break;
-    // one argument given - either decrpyt or encrypt
-        case 2:
-            for (uint8_t i = 1; i < argc; i++) {
-                if (argv[i][0] == ARG_CHAR) {
-                    // if encrypt / decrypt command given
-                    if (argv[i][1] == ENCRYPT_ARG || argv[i][1] == DECRYPT_ARG) {
-                        input_en_decrypt(argv[i][1], SHIFT);
-                    }
-                    break;
+
+    struct Arguments args = {
+        STD_SHIFT, 
+        true, 
+        EMPTY_STR, 
+        EMPTY_STR
+    };
+
+    int opt;
+
+    while ((opt = getopt(argc, argv, ALL_ARGS)) != -1) {
+        switch (opt) {
+            case 'e':
+                args.do_encryption = true;
+                break;
+            case 'd':
+                args.do_encryption = false;
+                break;
+            case 'i':
+                if (sizeof(optarg) < sizeof(args.input_file_name)) {
+                    strncpy(args.input_file_name, optarg, sizeof(args.input_file_name) - 1);
                 }
-            }
-            break;
-        case 3:
-    // two arguments given - set the encryption key or encrypt a whole file
-            for (uint8_t i = 1; i < argc; i++) {
-                if (argv[i][0] == ARG_CHAR) {
-                    if (i + 1 < argc) {
-                        switch (argv[i][1]) {
-                            case SHIFT_ARG:     //if shift command is given
-                                    int shift_input;
-                                    sscanf(argv[i+1], "%d", &shift_input);
-                                    input_en_decrypt(ENCRYPT_ARG, shift_input);
-                                break;
-                            case FILE_ARG:      //if file arg is given
-                                break;
-                        }
-                    }
+                break;
+            case 'o':
+                if (sizeof(optarg) < sizeof(args.output_file_name)) {
+                    strncpy(args.output_file_name, optarg, sizeof(args.output_file_name) - 1);
                 }
-            }
-            break;
-    // three arguments given - set key and de or encrypt
-        case 4:
-            for (uint8_t i = 1; i < argc; i++) {
-                switch (argv[i][0]) {
-                    case ARG_CHAR:
-                        switch (argv[i][1]) {
-                            case SHIFT_ARG:
-                                if (i + 1 < argc) {
-                                    sscanf(argv[i+1], "%d", &shift_input);
-                                }
-                                break;
-                            case DECRYPT_ARG:
-                            case ENCRYPT_ARG:
-                                argument = argv[i][1];
-                                break;
-                        }
-                        break;
+                break;
+            case 's':
+                if (is_number(optarg)){
+                    sscanf(optarg, "%d", &args.shift);
+                } else {
+                    fprintf(stderr, "%s: shift must be an integer\n", argv[0]);
+                    return 1;
                 }
-            }
-            if (argument == DECRYPT_ARG || argument == ENCRYPT_ARG) {
-                input_en_decrypt(argument, shift_input);
-            }
+                break;
+            default:
+                fprintf(stderr, "Usage: %s [-io] filename [-s] shift [-ed]\n", argv[0]);
             break;
+        }
+    }
+
+    //printf("%d | %d | %s - %s |\n", args.shift, args.do_encryption, args.input_file_name, args.output_file_name);
+
+    char input[STR_LEN], output[STR_LEN];
+    if (strlen(args.input_file_name) >= 3) {
+        // input file and output file are given
+        if (strlen(args.output_file_name) >= 3) {
+            FILE * output_file;
+            FILE * input_file;
+            input_file = fopen(args.input_file_name, "r");
+            output_file = fopen(args.output_file_name, "a");
+            while (fgets(input, STR_LEN, input_file) != NULL) {
+                caesar_shift(args, input, output);
+                fputs(output, output_file);
+            }
+            fclose(input_file);
+            fclose(output_file);
+        // only input file is given
+        } else {
+            FILE * input_file;
+            input_file = fopen(args.input_file_name, "r");
+            while (fgets(input, STR_LEN, input_file) != NULL) {
+                caesar_shift(args, input, output);
+                printf("%s", output);
+            }
+            fclose(input_file);
+        }
+    } else {
+        // only output file is given
+        if (strlen(args.output_file_name) >= 3) {
+            printf("Please enter the text: ");
+            scanf("%[^\n]s", input);
+            caesar_shift(args, input, output);
+            FILE * output_file;
+            output_file = fopen(args.output_file_name, "a");
+            fputs(output, output_file);
+            fclose(output_file);
+        // no files are given
+        } else {
+            printf("Please enter the text: ");
+            scanf("%[^\n]s", input);
+            caesar_shift(args, input, output);
+            printf("The result is: \"%s\"\n", output);
+        }
     }
 
     return 0;
 }
 
-void input_en_decrypt(char action, int16_t shift) {
-    char input[500], output[500];
-    if (action == ENCRYPT_ARG) {
-        printf("Please enter the plain text: ");
-        scanf("%[^\n]s", input);
-        encrypt(input, shift, output);
-        printf("The encrypted text is: \"%s\"\n", output);
-    } else if (action == DECRYPT_ARG) {
-        printf("Please enter the encrypted text: ");
-        scanf("%[^\n]s", input);
-        decrypt(input, shift, output);
-        printf("The plain text is: \"%s\"\n", output);
+bool is_number(char str[]) {
+    if (*str == '-' || (*str >= '0' && *str <= '9')) {
+        ++str;
+        while (*str != 0) {
+            if (!(*str >= '0' && *str <= '9')) {
+                return false;
+            }
+            ++str;
+        }
+        return true;
+    } else {
+        return false;
     }
 }
 
-void encrypt(char input[], int16_t shift, char output[]) {
+void caesar_shift(struct Arguments args, char input[], char output[]) {
     int result;
+    if (args.do_encryption) {
+        while (*input != 0) {
+            if (*input >= ' ' && *input <= '~') {
+                result = ((*input - ' ') + args.shift);
+                if (result < 0) {
+                    result += RANGE;
+                }
+                *output = result % (RANGE) + ' ';
+            } else {
+                *output = *input;
+            }
+            input++;
+            output++;
+        }
+        *output = 0;
+    } else {
+        while (*input != 0) {
+            if (*input >= ' ' && *input <= '~') {
+                result = ((*input - ' ') - args.shift);
+                if (result < 0) {
+                    result += RANGE;
+                }
+                *output = result % (RANGE) + ' ';
+            } else {
+                *output = *input;
+            }
+            input++;
+            output++;
+        }
+        *output = 0;
+    }
+}
+
+/*
+// encrypts the given string using the caesar cipher and shift
+void encrypt(char input[], int shift, char output[]) {
     while (*input != 0) {
         if (*input >= ' ' && *input <= '~') {
             result = ((*input - ' ') + shift);
-            printf("%d\n", result);
             if (result < 0) {
                 result += RANGE;
             }
@@ -143,21 +190,8 @@ void encrypt(char input[], int16_t shift, char output[]) {
     *output = 0;
 }
 
-void decrypt(char input[], int16_t shift, char output[]) {
-    int result;
-    printf("%s\n", input);
-    while (*input != 0) {
-        if (*input >= ' ' && *input <= '~') {
-            result = ((*input - ' ') - shift);
-            if (result < 0) {
-                result += RANGE;
-            }
-            *output = result % (RANGE) + ' ';
-        } else {
-            *output = *input;
-        }
-        input++;
-        output++;
-    }
-    *output = 0;
-    }
+// decrypts the given string using the caesar cipher and shift
+void decrypt(char input[], int shift, char output[]) {
+    encrypt(input, -shift, output);
+}
+*/
