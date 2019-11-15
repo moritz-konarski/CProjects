@@ -1,0 +1,2 @@
+Hello, this my test file for the encryption program. Here I will test how to
+read files, take their contents and encrypt them.
