@@ -5,70 +5,78 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define STD_SHIFT    3
+#define STD_KEYWORD "Vigenere"
 #define STR_LEN     500
-#define RANGE '~' - ' '
+#define NAME_LEN    100
+#define FIRST_CHAR  ' '
+#define LAST_CHAR   '~'
+#define RANGE LAST_CHAR - FIRST_CHAR
 #define ARG_CHAR    '-'
 
 #define ENCRYPT_ARG 'e'
 #define DECRYPT_ARG 'd'
-#define SHIFT_ARG   's'
+#define KEYWORD_ARG 'k'
 #define INPUT_ARG   'i'
 #define OUTPUT_ARG  'o'
 
-#define ALL_ARGS    "edi:o:s:"
+#define ALL_ARGS    "edi:o:k:"
 
 #define EMPTY_STR   "\0"
 
 struct Arguments {
-    int shift;
     bool do_encryption;
-    char input_file_name[100], 
-         output_file_name[100];
+    char input_file_name[NAME_LEN], 
+         output_file_name[NAME_LEN],
+         keyword[NAME_LEN];
 };
 
-void caesar_shift(struct Arguments, char input[], char output[]);
-bool is_number(char str[]);
+void vigenere_cipher(struct Arguments, char input[], char output[]);
 
 int main(uint8_t argc, char *argv[]) {
 
     struct Arguments args = {
-        STD_SHIFT, 
         true, 
         EMPTY_STR, 
-        EMPTY_STR
+        EMPTY_STR,
+        STD_KEYWORD
     };
 
     int opt;
 
     while ((opt = getopt(argc, argv, ALL_ARGS)) != -1) {
         switch (opt) {
-            case 'e':
+            case ENCRYPT_ARG:
                 args.do_encryption = true;
                 break;
-            case 'd':
+            case DECRYPT_ARG:
                 args.do_encryption = false;
                 break;
-            case 'i':
-                if (sizeof(optarg) < sizeof(args.input_file_name)) {
+            case INPUT_ARG:
+                if (strlen(optarg) < sizeof(args.input_file_name)) {
                     strncpy(args.input_file_name, optarg, sizeof(args.input_file_name) - 1);
-                }
-                break;
-            case 'o':
-                if (sizeof(optarg) < sizeof(args.output_file_name)) {
-                    strncpy(args.output_file_name, optarg, sizeof(args.output_file_name) - 1);
-                }
-                break;
-            case 's':
-                if (is_number(optarg)){
-                    sscanf(optarg, "%d", &args.shift);
                 } else {
-                    fprintf(stderr, "%s: shift must be an integer\n", argv[0]);
+                    fprintf(stderr, "%s: name of input file must be less than %d characters\n", argv[0], sizeof(args.input_file_name));
+                    return 1;
+                }
+                break;
+            case OUTPUT_ARG:
+                if (strlen(optarg) < sizeof(args.output_file_name)) {
+                    strncpy(args.output_file_name, optarg, sizeof(args.output_file_name) - 1);
+                } else {
+                    fprintf(stderr, "%s: name of output file must be less than %d characters\n", argv[0], sizeof(args.output_file_name));
+                    return 1;
+                }
+                break;
+            case KEYWORD_ARG:
+                if (strlen(optarg) < sizeof(args.keyword)) {
+                    strncpy(args.keyword, optarg, sizeof(args.keyword) - 1);
+                } else {
+                    fprintf(stderr, "%s: keyword must be less than %d characters\n", argv[0], sizeof(args.keyword));
                     return 1;
                 }
                 break;
             default:
-                fprintf(stderr, "Usage: %s [-io] filename [-s] shift [-ed]\n", argv[0]);
+                fprintf(stderr, "Usage: %s [-io] filename [-k] keyword [-ed]\n", argv[0]);
             break;
         }
     }
@@ -84,7 +92,7 @@ int main(uint8_t argc, char *argv[]) {
             input_file = fopen(args.input_file_name, "r");
             output_file = fopen(args.output_file_name, "a");
             while (fgets(input, STR_LEN, input_file) != NULL) {
-                caesar_shift(args, input, output);
+                vigenere_cipher(args, input, output);
                 fputs(output, output_file);
             }
             fclose(input_file);
@@ -94,7 +102,7 @@ int main(uint8_t argc, char *argv[]) {
             FILE * input_file;
             input_file = fopen(args.input_file_name, "r");
             while (fgets(input, STR_LEN, input_file) != NULL) {
-                caesar_shift(args, input, output);
+                vigenere_cipher(args, input, output);
                 printf("%s", output);
             }
             fclose(input_file);
@@ -104,7 +112,7 @@ int main(uint8_t argc, char *argv[]) {
         if (strlen(args.output_file_name) >= 3) {
             printf("Please enter the text: ");
             scanf("%[^\n]s", input);
-            caesar_shift(args, input, output);
+            vigenere_cipher(args, input, output);
             FILE * output_file;
             output_file = fopen(args.output_file_name, "a");
             fputs(output, output_file);
@@ -113,7 +121,7 @@ int main(uint8_t argc, char *argv[]) {
         } else {
             printf("Please enter the text: ");
             scanf("%[^\n]s", input);
-            caesar_shift(args, input, output);
+            vigenere_cipher(args, input, output);
             printf("The result is: \"%s\"\n", output);
         }
     }
@@ -121,66 +129,24 @@ int main(uint8_t argc, char *argv[]) {
     return 0;
 }
 
-bool is_number(char str[]) {
-    if (*str == '-' || (*str >= '0' && *str <= '9')) {
-        ++str;
-        while (*str != 0) {
-            if (!(*str >= '0' && *str <= '9')) {
-                return false;
-            }
-            ++str;
-        }
-        return true;
-    } else {
-        return false;
-    }
-}
-
-void caesar_shift(struct Arguments args, char input[], char output[]) {
-    int result;
-    if (args.do_encryption) {
-        while (*input != 0) {
-            if (*input >= ' ' && *input <= '~') {
-                result = ((*input - ' ') + args.shift);
-                if (result < 0) {
-                    result += RANGE;
-                }
-                *output = result % (RANGE) + ' ';
-            } else {
-                *output = *input;
-            }
-            input++;
-            output++;
-        }
-        *output = 0;
-    } else {
-        while (*input != 0) {
-            if (*input >= ' ' && *input <= '~') {
-                result = ((*input - ' ') - args.shift);
-                if (result < 0) {
-                    result += RANGE;
-                }
-                *output = result % (RANGE) + ' ';
-            } else {
-                *output = *input;
-            }
-            input++;
-            output++;
-        }
-        *output = 0;
-    }
-}
-
-/*
-// encrypts the given string using the caesar cipher and shift
-void encrypt(char input[], int shift, char output[]) {
+void vigenere_cipher(struct Arguments args, char input[], char output[]) {
+    int keyword_len = strlen(args.keyword),
+        index = 0, 
+        result, 
+        shift, 
+        sign = args.do_encryption ? 1 : -1;
     while (*input != 0) {
-        if (*input >= ' ' && *input <= '~') {
-            result = ((*input - ' ') + shift);
+        if (*input >= FIRST_CHAR && *input <= LAST_CHAR) {
+            shift = args.keyword[index] - FIRST_CHAR;
+            ++index;
+            if (index == keyword_len) {
+                index = 0;
+            }
+            result = ((*input - FIRST_CHAR) + sign * shift);
             if (result < 0) {
                 result += RANGE;
             }
-            *output = result % (RANGE) + ' ';
+            *output = result % (RANGE) + FIRST_CHAR;
         } else {
             *output = *input;
         }
@@ -189,9 +155,3 @@ void encrypt(char input[], int shift, char output[]) {
     }
     *output = 0;
 }
-
-// decrypts the given string using the caesar cipher and shift
-void decrypt(char input[], int shift, char output[]) {
-    encrypt(input, -shift, output);
-}
-*/

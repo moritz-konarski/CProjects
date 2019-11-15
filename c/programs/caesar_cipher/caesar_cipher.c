@@ -7,7 +7,10 @@
 
 #define STD_SHIFT    3
 #define STR_LEN     500
-#define RANGE '~' - ' '
+#define NAME_LEN    100
+#define FIRST_CHAR  ' '
+#define LAST_CHAR   '~'
+#define RANGE LAST_CHAR - FIRST_CHAR
 #define ARG_CHAR    '-'
 
 #define ENCRYPT_ARG 'e'
@@ -23,8 +26,8 @@
 struct Arguments {
     int shift;
     bool do_encryption;
-    char input_file_name[100], 
-         output_file_name[100];
+    char input_file_name[NAME_LEN], 
+         output_file_name[NAME_LEN];
 };
 
 void caesar_shift(struct Arguments, char input[], char output[]);
@@ -43,23 +46,29 @@ int main(uint8_t argc, char *argv[]) {
 
     while ((opt = getopt(argc, argv, ALL_ARGS)) != -1) {
         switch (opt) {
-            case 'e':
+            case ENCRYPT_ARG:
                 args.do_encryption = true;
                 break;
-            case 'd':
+            case DECRYPT_ARG: 
                 args.do_encryption = false;
                 break;
-            case 'i':
-                if (sizeof(optarg) < sizeof(args.input_file_name)) {
+            case INPUT_ARG:
+                if (strlen(optarg) < sizeof(args.input_file_name)) {
                     strncpy(args.input_file_name, optarg, sizeof(args.input_file_name) - 1);
+                } else {
+                    fprintf(stderr, "%s: input file name must be less than %d characters\n", argv[0], sizeof(args.input_file_name));
+                    return 1;
                 }
                 break;
-            case 'o':
-                if (sizeof(optarg) < sizeof(args.output_file_name)) {
+            case OUTPUT_ARG:
+                if (strlen(optarg) < sizeof(args.output_file_name)) {
                     strncpy(args.output_file_name, optarg, sizeof(args.output_file_name) - 1);
+                } else {
+                    fprintf(stderr, "%s: input file name must be less than %d characters\n", argv[0], sizeof(args.output_file_name));
+                    return 1;
                 }
                 break;
-            case 's':
+            case SHIFT_ARG:
                 if (is_number(optarg)){
                     sscanf(optarg, "%d", &args.shift);
                 } else {
@@ -137,50 +146,15 @@ bool is_number(char str[]) {
 }
 
 void caesar_shift(struct Arguments args, char input[], char output[]) {
-    int result;
-    if (args.do_encryption) {
-        while (*input != 0) {
-            if (*input >= ' ' && *input <= '~') {
-                result = ((*input - ' ') + args.shift);
-                if (result < 0) {
-                    result += RANGE;
-                }
-                *output = result % (RANGE) + ' ';
-            } else {
-                *output = *input;
-            }
-            input++;
-            output++;
-        }
-        *output = 0;
-    } else {
-        while (*input != 0) {
-            if (*input >= ' ' && *input <= '~') {
-                result = ((*input - ' ') - args.shift);
-                if (result < 0) {
-                    result += RANGE;
-                }
-                *output = result % (RANGE) + ' ';
-            } else {
-                *output = *input;
-            }
-            input++;
-            output++;
-        }
-        *output = 0;
-    }
-}
-
-/*
-// encrypts the given string using the caesar cipher and shift
-void encrypt(char input[], int shift, char output[]) {
+    int result,
+        sign = args.do_encryption ? 1 : -1;
     while (*input != 0) {
-        if (*input >= ' ' && *input <= '~') {
-            result = ((*input - ' ') + shift);
+        if (*input >= FIRST_CHAR && *input <= LAST_CHAR) {
+            result = ((*input - FIRST_CHAR) + sign * args.shift);
             if (result < 0) {
                 result += RANGE;
             }
-            *output = result % (RANGE) + ' ';
+            *output = result % (RANGE) + FIRST_CHAR;
         } else {
             *output = *input;
         }
@@ -189,9 +163,3 @@ void encrypt(char input[], int shift, char output[]) {
     }
     *output = 0;
 }
-
-// decrypts the given string using the caesar cipher and shift
-void decrypt(char input[], int shift, char output[]) {
-    encrypt(input, -shift, output);
-}
-*/
