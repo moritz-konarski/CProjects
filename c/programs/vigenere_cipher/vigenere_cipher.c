@@ -6,7 +6,7 @@
 #include <stdbool.h>
 
 #define STD_KEYWORD "Vigenere"
-#define STR_LEN     500
+#define STR_LEN     500 
 #define NAME_LEN    100
 #define FIRST_CHAR  ' '
 #define LAST_CHAR   '~'
@@ -30,7 +30,7 @@ struct Arguments {
          keyword[NAME_LEN];
 };
 
-void vigenere_cipher(struct Arguments, char input[], char output[]);
+void vigenere_cipher(struct Arguments, char input[], char output[], int index);
 
 int main(uint8_t argc, char *argv[]) {
 
@@ -55,7 +55,7 @@ int main(uint8_t argc, char *argv[]) {
                 if (strlen(optarg) < sizeof(args.input_file_name)) {
                     strncpy(args.input_file_name, optarg, sizeof(args.input_file_name) - 1);
                 } else {
-                    fprintf(stderr, "%s: name of input file must be less than %d characters\n", argv[0], sizeof(args.input_file_name));
+                    fprintf(stderr, "%s: name of input file must be less than %ld characters\n", argv[0], sizeof(args.input_file_name));
                     return 1;
                 }
                 break;
@@ -63,7 +63,7 @@ int main(uint8_t argc, char *argv[]) {
                 if (strlen(optarg) < sizeof(args.output_file_name)) {
                     strncpy(args.output_file_name, optarg, sizeof(args.output_file_name) - 1);
                 } else {
-                    fprintf(stderr, "%s: name of output file must be less than %d characters\n", argv[0], sizeof(args.output_file_name));
+                    fprintf(stderr, "%s: name of output file must be less than %ld characters\n", argv[0], sizeof(args.output_file_name));
                     return 1;
                 }
                 break;
@@ -71,7 +71,7 @@ int main(uint8_t argc, char *argv[]) {
                 if (strlen(optarg) < sizeof(args.keyword)) {
                     strncpy(args.keyword, optarg, sizeof(args.keyword) - 1);
                 } else {
-                    fprintf(stderr, "%s: keyword must be less than %d characters\n", argv[0], sizeof(args.keyword));
+                    fprintf(stderr, "%s: keyword must be less than %ld characters\n", argv[0], sizeof(args.keyword));
                     return 1;
                 }
                 break;
@@ -84,6 +84,7 @@ int main(uint8_t argc, char *argv[]) {
     //printf("%d | %d | %s - %s |\n", args.shift, args.do_encryption, args.input_file_name, args.output_file_name);
 
     char input[STR_LEN], output[STR_LEN];
+    int index = 0;
     if (strlen(args.input_file_name) >= 3) {
         // input file and output file are given
         if (strlen(args.output_file_name) >= 3) {
@@ -92,7 +93,7 @@ int main(uint8_t argc, char *argv[]) {
             input_file = fopen(args.input_file_name, "r");
             output_file = fopen(args.output_file_name, "a");
             while (fgets(input, STR_LEN, input_file) != NULL) {
-                vigenere_cipher(args, input, output);
+                vigenere_cipher(args, input, output, index);
                 fputs(output, output_file);
             }
             fclose(input_file);
@@ -102,7 +103,7 @@ int main(uint8_t argc, char *argv[]) {
             FILE * input_file;
             input_file = fopen(args.input_file_name, "r");
             while (fgets(input, STR_LEN, input_file) != NULL) {
-                vigenere_cipher(args, input, output);
+                vigenere_cipher(args, input, output, index);
                 printf("%s", output);
             }
             fclose(input_file);
@@ -112,7 +113,7 @@ int main(uint8_t argc, char *argv[]) {
         if (strlen(args.output_file_name) >= 3) {
             printf("Please enter the text: ");
             scanf("%[^\n]s", input);
-            vigenere_cipher(args, input, output);
+            vigenere_cipher(args, input, output, index);
             FILE * output_file;
             output_file = fopen(args.output_file_name, "a");
             fputs(output, output_file);
@@ -121,7 +122,7 @@ int main(uint8_t argc, char *argv[]) {
         } else {
             printf("Please enter the text: ");
             scanf("%[^\n]s", input);
-            vigenere_cipher(args, input, output);
+            vigenere_cipher(args, input, output, index);
             printf("The result is: \"%s\"\n", output);
         }
     }
@@ -129,9 +130,8 @@ int main(uint8_t argc, char *argv[]) {
     return 0;
 }
 
-void vigenere_cipher(struct Arguments args, char input[], char output[]) {
+void vigenere_cipher(struct Arguments args, char input[], char output[], int index) {
     int keyword_len = strlen(args.keyword),
-        index = 0, 
         result, 
         shift, 
         sign = args.do_encryption ? 1 : -1;
