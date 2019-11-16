@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define STR_LEN     500
+#define STR_LEN     1000
 #define NAME_LEN    100
 #define INITIAL_CHAR ' '
 #define RANGE LAST_CHAR - FIRST_CHAR
@@ -32,11 +32,13 @@ char get_char(uint8_t num);
 
 int main(uint8_t argc, char *argv[]) {
 
+    /*
     char text[10] = "M";
     char output[20];
 
     encode_triplet(text, output, strlen(text));
     printf("%s\n", output);
+    */
 
     struct Arguments args = {
         true, 
@@ -141,7 +143,27 @@ void base64_encode(struct Arguments args, char input[], char output[]) {
     uint8_t function_arg[3];
     char function_result[4];
     int input_index = 0,
-        output_index = 0;
+        output_index = 0,
+        n_chars = strlen(input),
+        n_triplets = n_chars % 3,
+        remainder = n_chars - 3*n_triplets;
+    for (int i = 0; i < n_triplets; ++i) {
+        for (uint8_t j = 0; j < 3; ++j) {
+            function_arg[j] = input[3*i+j];
+        }
+        encode_triplet(function_arg, function_result, 3);
+        for (uint8_t j = 0; j < 4; ++j) {
+            output[4*i+j] = function_result[j];
+        }
+    }
+    for (uint8_t j = 0; j < remainder; ++j) {
+        function_arg[j] = input[3*n_triplets-1+j];
+    }
+    encode_triplet(function_arg, function_result, remainder);
+    for (uint8_t j = 0; j < 4; ++j) {
+        output[4*n_triplets-1+j] = function_result[j];
+    }
+    /*
     while (*input != 0) {
        function_arg[i] = *input;
        ++input_index;
@@ -165,29 +187,8 @@ void base64_encode(struct Arguments args, char input[], char output[]) {
         output++;
     }
     *output = 0;
-
-
-    //take three chars as input
-    char result[4];
-    //output 4 chars
-    uint32_t triple;
-    while (*input != 0) {
-        if (*input >= FIRST_CHAR && *input <= LAST_CHAR) {
-            triple = 0;
-            for (uint8_t i = 3; i > 0 ; --i) {
-                triple = triple | (*input << (0x08 * i));
-                input++;
-            }
-
-        } else {
-            *output = *input;
-        }
-        input++;
-        output++;
-    }
-    *output = 0;
+    */
 }
-*/
 
 void encode_triplet(uint8_t input[], char output[], uint8_t input_len) {
     uint8_t input_nums[3],
