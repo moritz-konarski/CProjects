@@ -5,12 +5,13 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define STR_LEN     1000
+// numeric constants
+#define IN_LEN      1332
+#define OUT_LEN     1332
 #define NAME_LEN    100
-#define INITIAL_CHAR ' '
-#define RANGE LAST_CHAR - FIRST_CHAR
-#define ARG_CHAR    '-'
 
+// character constants
+#define ARG_CHAR    '-'
 #define INPUT_ARG   'i'
 #define OUTPUT_ARG  'o'
 #define ENCODE_ARG  'e'
@@ -20,35 +21,26 @@
 
 #define EMPTY_STR   "\0"
 
+// structure for function arguments
 struct Arguments {
     bool encode;
     char input_file_name[NAME_LEN], 
          output_file_name[NAME_LEN];
 };
 
-// TODO: add a string encode and a number encode
+// encode any length of input
 void base64_encode(struct Arguments, uint8_t input[], char output[], int input_len);
-void encode_triplet(uint32_t triplet, char output[]);
-char get_char(uint8_t num); 
+
+// encode a single triplet
+char encode_sextet(uint8_t num); 
 
 int main(uint8_t argc, char *argv[]) {
 
-    /*
-    uint64_t test =      1010010101010010100101010010101010010100101001010010101001010100;
-    char test_str[70] = "1010010101010010100101010010101010010100101001010010101001010100";
-    char test_code[70];
-    */
-
     struct Arguments args = {
-        true,
-        EMPTY_STR, 
-        EMPTY_STR
+        true,       // standard is encode
+        EMPTY_STR,  // standard is no input
+        EMPTY_STR   // standard is no output
     };
-    
-   // base64_encode(args, test_str, test_code);
-
-    //printf("binary: %s\n", test_str);
-
 
     int opt;
 
@@ -82,8 +74,9 @@ int main(uint8_t argc, char *argv[]) {
         }
     }
 
-    char input[STR_LEN], output[STR_LEN];
-    int len;
+    // input and output arrays
+    uint8_t input[IN_LEN], output[OUT_LEN];
+    // input file given
     if (strlen(args.input_file_name) >= 3) {
         // input file and output file are given
         if (strlen(args.output_file_name) >= 3) {
@@ -91,7 +84,7 @@ int main(uint8_t argc, char *argv[]) {
             FILE * input_file;
             input_file = fopen(args.input_file_name, "r");
             output_file = fopen(args.output_file_name, "a");
-            while (fgets(input, STR_LEN, input_file) != NULL) {
+            while (fgets(input, IN_LEN, input_file) != NULL) {
                 base64_encode(args, input, output, strlen(input));
                 fputs(output, output_file);
             }
@@ -101,13 +94,13 @@ int main(uint8_t argc, char *argv[]) {
         } else {
             FILE * input_file;
             input_file = fopen(args.input_file_name, "r");
-            while (fgets(input, STR_LEN, input_file) != NULL) {
+            while (fgets(input, IN_LEN, input_file) != NULL) {
                 base64_encode(args, input, output, strlen(input));
                 printf("%s", output);
             }
             fclose(input_file);
         }
-    } else {
+    } else {    
         // only output file is given
         if (strlen(args.output_file_name) >= 3) {
             printf("Please enter the text: ");
@@ -131,68 +124,115 @@ int main(uint8_t argc, char *argv[]) {
 
 // does the encoding or decoding of a string
 void base64_encode(struct Arguments args, uint8_t input[], char output[], int input_len) {
-    char function_output[4];
-    uint32_t triplet;
-    int n_triplets = (input_len % 3 == 0) ? input_len / 3 : input_len / 3 + 1;
-    uint8_t missing_triplets;
+    if (args.encode) {
+        // output of the encoding function
+        char function_output[4];
+        // triplet for splitting 3 bytes into 4 six bit sextets
+        uint32_t triplet;
+        // computing how many triplets are in the input
+        int n_triplets = (input_len % 3 == 0) ? input_len / 3 : input_len / 3 + 1;
+        // counting how many triplets were missed in the last one
+        uint8_t missing_triplets = 0;
 
-    printf("%d\n", input_len);
-    printf("%d\n", n_triplets);
-    printf("%s\n", input);
-
-    int i = 0;
-    // step through all the triplets
-    for (; i < n_triplets - 1; ++i) {
+        //TODO: clean up this code and make it more readable - maybe use an if
+        //statement for whether or not the input is evenly divisible
+        // persistent index for the two loops
+        int i = 0;
+        // step through all but the last of the triplets
+        for (; i < n_triplets - 1; ++i) {
+            triplet = 0;
+            // for each element in the triplet
+            for (uint8_t j = 0; j < 3; ++j) {
+                if (3*i+j < input_len) {
+                    // shift 3 bytes into a 4 byte int
+                    triplet |= (input[3 * i + j] << (0x08 * (3 - j)));
+                }
+            }
+            for (uint8_t j = 0; j < 4; ++j) {
+                // convert the parts of the triple into the respective characters
+                function_output[j] = encode_sextet((triplet >> ((3 - j) * 0x06) + 0x08) & 0x3f);
+            }
+            // copy the output from the function into the output string
+            for (uint8_t j = 0; j < 4; ++j) {
+                output[4*i+j] = function_output[j];
+            }
+        }
+        // set the index correctly
+        i = n_triplets - 1;
         triplet = 0;
         // for each element in the triplet
         for (uint8_t j = 0; j < 3; ++j) {
             if (3*i+j < input_len) {
-                printf("in: %x\n", input[3*i+j]);
                 triplet |= (input[3 * i + j] << (0x08 * (3 - j)));
+            } else {
+                ++missing_triplets;
             }
         }
-        printf("tr: %x\n", triplet);
-        encode_triplet(triplet, function_output);
         for (uint8_t j = 0; j < 4; ++j) {
+            // convert the parts of the triple into the respective characters
+            function_output[j] = encode_sextet((triplet >> ((3 - j) * 0x06) + 0x08) & 0x3f);
+        }
+        for (uint8_t j = 0; j < 4 - missing_triplets; ++j) {
             output[4*i+j] = function_output[j];
         }
-    }
-    i = n_triplets - 1;
-    triplet = 0;
-    missing_triplets = 0;
-    // for each element in the triplet
-    for (uint8_t j = 0; j < 3; ++j) {
-        if (3*i+j < input_len) {
-            printf("in: %x\n", input[3*i+j]);
-            triplet |= (input[3 * i + j] << (0x08 * (3 - j)));
-        } else {
-            ++missing_triplets;
+        for (uint8_t j = 4 - missing_triplets; j < 4; ++j) {
+            output[4*i+j] = '=';
         }
-    }
-    printf("tr: %x\n", triplet);
-    printf("mt: %d\n", missing_triplets);
-    encode_triplet(triplet, function_output);
-    for (uint8_t j = 0; j < 4 - missing_triplets; ++j) {
-        output[4*i+j] = function_output[j];
-    }
-    for (uint8_t j = 4 - missing_triplets; j < 4; ++j) {
-        output[4*i+j] = '=';
-    }
 
-    output[4 * n_triplets] = '\0';
+        output[4 * n_triplets] = '\0';
+    } else {
+        // output of the encoding function
+        uint8_t function_output[3];
+        // triplet for splitting 4 sextets into 3 bytes
+        uint32_t triplet;
+        // computing how many triplets are in the input
+        int n_triplets = input_len / 4;
+        // counting how many triplets were missed in the last one
+        uint8_t empty_sextets = 0;
+
+        // persistent index for the two loops
+        int i = 0;
+        // step through all but the last of the triplets
+        for (; i < n_triplets - 1; ++i) {
+            triplet = 0;
+            // for each element in the triplet
+            for (uint8_t j = 0; j < 4; ++j) {
+                if (4*i+j < input_len) {
+                    // shift 4 sextets into a 4 byte int
+                    triplet |= (input[4 * i + j] << (0x08 * (3 - j)));
+                }
+            }
+            // copy the output from the function into the output string
+            for (uint8_t j = 0; j < 4; ++j) {
+                output[4*i+j] = function_output[j];
+            }
+        }
+        // set the index correctly
+        i = n_triplets - 1;
+        triplet = 0;
+        // for each element in the triplet
+        /*
+        for (uint8_t j = 0; j < 3; ++j) {
+            if (3*i+j < input_len) {
+                triplet |= (input[3 * i + j] << (0x08 * (3 - j)));
+            } else {
+                ++missing_triplets;
+            }
+        }
+        for (uint8_t j = 0; j < 4 - missing_triplets; ++j) {
+            output[4*i+j] = function_output[j];
+        }
+        for (uint8_t j = 4 - missing_triplets; j < 4; ++j) {
+            output[4*i+j] = '=';
+        }
+
+        output[4 * n_triplets] = '\0';
+        */
+    }
 }
 
-// encode individual triplets of input characters
-void encode_triplet(uint32_t triplet, char output[]) {
-    for (uint8_t i = 0; i < 4; ++i) {
-        // convert the parts of the triple into the respective characters
-        printf("- %d\n", (triplet >> ((3 - i) * 0x06) + 0x08) & 0x3f);
-        output[i] = get_char((triplet >> ((3 - i) * 0x06) + 0x08) & 0x3f);
-    }
-}
-
-// returns the character for the Base64 encoding
-char get_char(uint8_t num) {
+// returns the character for the base64 encoding
+char encode_sextet(uint8_t num) {
     if (num <= 25) {
         return num + 'A';
     } else if (num <= 51) {
