@@ -1,3 +1,3 @@
 # CProjects
 
-This repo contains my practice in c and c++ from various sources
+This repo contains my c and c++ code
