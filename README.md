@@ -1,3 +1,3 @@
-# CProjects
+# c_projects
 
-This repo contains my c and c++ code
+This repo contains my c code.
