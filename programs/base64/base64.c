@@ -29,7 +29,8 @@ struct Arguments {
 };
 
 // encode any length of input
-void base64_encode(struct Arguments, uint8_t input[], char output[], int input_len);
+void base64_encode(struct Arguments, uint8_t input[], char output[], 
+    int input_len);
 
 // encode a single triplet
 char encode_sextet(uint8_t num); 
@@ -54,22 +55,27 @@ int main(uint8_t argc, char *argv[]) {
                 break;
             case INPUT_ARG:
                 if (strlen(optarg) < sizeof(args.input_file_name)) {
-                    strncpy(args.input_file_name, optarg, sizeof(args.input_file_name) - 1);
+                    strncpy(args.input_file_name, optarg, 
+                        sizeof(args.input_file_name) - 1);
                 } else {
-                    fprintf(stderr, "%s: input file name must be less than %ld characters\n", argv[0], sizeof(args.input_file_name));
+                    fprintf(stderr, "%s: input file name must be less than %ld\\ 
+                        characters\n", argv[0], sizeof(args.input_file_name));
                     return 1;
                 }
                 break;
             case OUTPUT_ARG:
                 if (strlen(optarg) < sizeof(args.output_file_name)) {
-                    strncpy(args.output_file_name, optarg, sizeof(args.output_file_name) - 1);
+                    strncpy(args.output_file_name, optarg, 
+                        sizeof(args.output_file_name) - 1);
                 } else {
-                    fprintf(stderr, "%s: input file name must be less than %ld characters\n", argv[0], sizeof(args.output_file_name));
+                    fprintf(stderr, "%s: input file name must be less than %ld\\ 
+                        characters\n", argv[0], sizeof(args.output_file_name));
                     return 1;
                 }
                 break;
             default:
-                fprintf(stderr, "Usage: %s [-io] filename [-ed] encode/decode\n", argv[0]);
+                fprintf(stderr, "Usage: %s [-io] filename [-ed] encode/decode\\
+                    \n", argv[0]);
             break;
         }
     }
@@ -123,14 +129,16 @@ int main(uint8_t argc, char *argv[]) {
 }
 
 // does the encoding or decoding of a string
-void base64_encode(struct Arguments args, uint8_t input[], char output[], int input_len) {
+void base64_encode(struct Arguments args, uint8_t input[], char output[], 
+    int input_len) {
     if (args.encode) {
         // output of the encoding function
         char function_output[4];
         // triplet for splitting 3 bytes into 4 six bit sextets
         uint32_t triplet;
         // computing how many triplets are in the input
-        int n_triplets = (input_len % 3 == 0) ? input_len / 3 : input_len / 3 + 1;
+        int n_triplets = (input_len % 3 == 0) ? input_len / 3 : 
+            input_len / 3 + 1;
         // counting how many triplets were missed in the last one
         uint8_t missing_triplets = 0;
 
