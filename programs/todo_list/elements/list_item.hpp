@@ -5,26 +5,13 @@
 #include <memory>
 #include <vector>
 #include <iostream>
+#include "../elements.hpp"
 
-class Item {
+class List_Item {
+
 public:
-
-    explicit Item(unsigned int level) {
+    explicit List_Item(unsigned int level) {
         _level = level;
-        switch (_level) {
-            case 0:
-                _enumeration_sign = "- ";
-                break;
-            case 1:
-                _enumeration_sign = "+ ";
-                break;
-            case 2:
-                _enumeration_sign = "* ";
-                break;
-            default:
-                _enumeration_sign = ". ";
-                break;
-        }
     }
 
     void set_level(unsigned int level) {
@@ -43,11 +30,11 @@ public:
         return _level;
     }
 
-    std::vector<std::shared_ptr<Item>> get_children() {
+    std::vector<std::shared_ptr<List_Item>> get_children() {
         return _children;
     }
 
-    void add_child(std::shared_ptr<Item> child) {
+    void add_child(std::shared_ptr<List_Item> child) {
         _children.push_back(child);
     }
 
@@ -57,6 +44,11 @@ public:
 
     void set_checked(bool is_checked) {
         _is_checked = is_checked;
+        if (!_children.empty()) {
+            for (auto &child : _children) {
+                child->set_checked(is_checked);
+            }
+        }
     }
 
     void print() {
@@ -64,7 +56,11 @@ public:
             std::cout << "\t";
         }
 
-        std::cout << _enumeration_sign << _text << std::endl;
+        if (_is_checked) {
+            std::cout << _checked_sign << _text << std::endl;
+        } else {
+            std::cout << _unchecked_sign << _text << std::endl;
+        }
 
         if (!_children.empty()) {
             for (auto &child : _children) {
@@ -75,10 +71,12 @@ public:
 
 private:
     bool _is_checked = false;
-    unsigned int _level;
+    unsigned int _level = 0;
     std::string _text;
-    std::string _enumeration_sign;
-    std::vector<std::shared_ptr<Item>> _children;
+    std::string _checked_sign = "[x] ";
+    std::string _unchecked_sign = "[ ] ";
+    std::vector<std::shared_ptr<List_Item>> _children;
+
 };
 
 #endif

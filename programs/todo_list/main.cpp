@@ -16,21 +16,25 @@ int main(int argc, char **argv) {
     myfile.close();
      */
 
-    auto list = make_shared<List>();
+    auto todo_list = make_shared<ToDo_List>();
     string name;
 
     cout << "Enter list name: ";
     cin >> name;
     cout << endl;
 
-    list->set_name(name);
-    list->create_item("First Item");
-    list->create_item("Second Item");
-    list->create_sub_item(list->get_items().at(0), "First Sub Item");
-    list->create_sub_item(list->get_items().at(0), "Second Sub Item");
-    list->create_sub_item(list->get_items().at(0)->get_children().at(0), "First Sub Sub Item");
+    auto list = todo_list->create_new_section("test _section");
 
-    list->print();
+    list->set_name(name);
+    list->create_item("First List_Item");
+    list->create_item("Second List_Item");
+    list->create_sub_item(list->get_items().at(0), "First Sub List_Item");
+    list->create_sub_item(list->get_items().at(0), "Second Sub List_Item");
+    list->create_sub_item(list->get_items().at(0)->get_children().at(0), "First Sub Sub List_Item");
+
+    list->get_items().at(0)->get_children().at(0)->set_checked(true);
+
+    todo_list->print();
 
     return 0;
 }

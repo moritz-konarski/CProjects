@@ -13,8 +13,9 @@ include_directories(
 )
 
 set(SOURCES
-        elements/item.hpp
-        elements/list.hpp
+        elements/list_item.hpp
+        elements/list_section.hpp
+        elements/todo_list.hpp
         elements.hpp
         )
 

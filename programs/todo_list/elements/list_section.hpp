@@ -5,28 +5,27 @@
 #include <utility>
 #include <vector>
 #include <string>
-#include <queue>
-#include "item.hpp"
+#include "../elements.hpp"
 
-class List {
+class List_Section {
 public:
 
-    static List read_list(std::string name) {
+    static List_Section read_list(std::string name) {
 
     }
 
-    static List create_list(std::string name) {
+    static List_Section create_list(std::string name) {
 
     }
 
     void create_item(std::string text) {
-        auto item = std::make_shared<Item>(0);
+        auto item = std::make_shared<List_Item>(0);
         item->set_text(std::move(text));
         _items.push_back(item);
     }
 
-    void create_sub_item(const std::shared_ptr<Item>& parent, std::string text) {
-        auto item = std::make_shared<Item>(parent->get_level() + 1);
+    void create_sub_item(const std::shared_ptr<List_Item> &parent, std::string text) {
+        auto item = std::make_shared<List_Item>(parent->get_level() + 1);
         item->set_text(std::move(text));
         parent->add_child(item);
     }
@@ -39,7 +38,7 @@ public:
         return _name;
     }
 
-    std::vector<std::shared_ptr<Item>> get_items() {
+    std::vector<std::shared_ptr<List_Item>> get_items() {
         return _items;
     }
 
@@ -51,10 +50,9 @@ public:
         }
     }
 
-
 private:
     std::string _name;
-    std::vector<std::shared_ptr<Item>> _items;
+    std::vector<std::shared_ptr<List_Item>> _items;
 };
 
 #endif
